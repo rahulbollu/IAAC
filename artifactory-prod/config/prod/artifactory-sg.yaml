@@ -1,0 +1,17 @@
+template_path: artifactory-sg.yaml
+parameters:
+   VpcId: vpc-09041cee364ae17b2
+   applicationname: artifactory
+   environmenttype: prod  
+   tagenvironment: prod
+   platform: devops
+   osversion: rhel-8
+   createdby: bollur@shure.com
+   itowner: khany@shure.com
+   costcenter: "1505"
+   businessowner: komosar@shure.com
+   #SourceSecurityGroupId: sg-0511a3270b56f09df
+   applicationtier: application
+   artSecurityGroupId: ArtSecurityGroupId
+   postgresSecurityGroupId: PostgresSecurityGroupId
+   artlbSecurityGroupId: ArtlbSecurityGroupId

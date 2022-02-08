@@ -1,0 +1,34 @@
+template_path: bitbucket-rds.yaml
+parameters:
+  
+  VpcId: vpc-0d744ac4f9a1387da
+  AvailabilityZone: us-east-1a
+  DBSubnetIds: subnet-059e7ea0ed74546d6, subnet-09bcc0d941ead2cc0
+  DBInstanceClass: db.t3.small
+  EngineVersion: "13.4"
+  DBEngineType: postgres
+  DBInstanceIdentifier: use1-eas-dev-pgsql-bit-rds01
+  DBStorageType: gp2
+  DBStorageSize: "20"
+  LicenseModel: postgresql-license
+  MaxAllocatedStorage: "200"
+  DBSubnetGroup: eas-dev-dino-mssql-rds-rdsdbsubnetgroup-1c4p7fi86tqar
+  StorageEncrypted: "true"
+  BackupRetentionPeriod: "35"
+  MultiAZ: "false"
+  PreferredBackupWindow: 03:00-04:00
+  PreferredMaintenanceWindow: Sun:04:00-Sun:06:00
+  ParameterGroupFamily: postgres13
+  bitPostgresRDSEndpointPort: bitdevPostgresRDSEndpointPort
+  bitPostgresRDSEndpointAddress: bitdevPostgresRDSEndpointAddress
+  psSecurityGroupId: psSecurityGroupId
+  environmenttype: dev
+  osversion: rhel-8
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  costcenter: "1649"
+  businessowner: komosar@shure.com
+  applicationname: bitbucket
+  applicationtier: application
+
+  

@@ -1,0 +1,17 @@
+template_path: bitbucket-sg.yaml
+parameters:
+   VpcId: vpc-09041cee364ae17b2
+   applicationname: bitbucket
+   environmenttype: dev
+   tagenvironment: dev
+   platform: devops
+   osversion: rhel-8
+   createdby: bollur@shure.com
+   itowner: khany@shure.com
+   costcenter: "1505"
+   businessowner: komosar@shure.com
+   #SourceSecurityGroupId: sg-0511a3270b56f09df
+   applicationtier: application
+   bitSecurityGroupId: bitSecurityGroupId
+   postgresSecurityGroupId: PostgresSecurityGroupId
+   bitlbSecurityGroupId: bitlbSecurityGroupId

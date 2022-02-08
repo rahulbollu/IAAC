@@ -1,0 +1,23 @@
+template_path: xina-ec2.yaml
+parameters:
+
+  SubnetId1: subnet-023c9d601b9f18905
+  applicationname: xina
+  PrivateIp: 172.16.182.51
+  AvailabilityZone: us-east-1a
+  InstanceType: r4.xlarge
+  ImageId: ami-0b0af3577fe5e3532
+  RootVolumeSize: '30'
+  DataVolumeSize: '30'
+  KmsKeyId: c89c60bc-9d30-4f4e-804d-bd35640eebe2
+  KeyPairName: BA_Dev_EC2_KeyPair
+  environmenttype: dev
+  TagEnvironment: dev
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  osversion: rhel-8
+  costcenter: "1505"
+  businessowner: komosar@shure.com
+  applicationtier: application
+  xinSecurityGroupId: no-ingress-sg
+  xinec2instanceid: xinec2instanceid

@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Internal Load Balancer to access bitbucket EC2 Instance in a private subnet'
+Parameters:
+  
+  VpcId: 
+    Type: String
+  Subnet1a: 
+    Type: String
+  Subnet1b: 
+    Type: String
+  bitAppLayerLoadBalancerHostedZoneId:
+    Type: String
+  bitAppLayerLoadBalancerDNSName:
+    Type: String
+  bitAppLayerInstanceId:
+    Type: String
+  environmenttype:
+    Type: 'String'
+    Description: 'Application Environment'
+  TargetGroupEnvironment:
+    Type: 'String'
+  bitInternalLoadBalancerSecurityGroupId:
+    Type: 'String'
+  applicationrole:
+    Type: 'String'
+  balancing:
+    Type: 'String'
+  costcenter:
+    Type: 'String'
+  applicationtier:
+    Type: 'String'
+    Description: 'Name of the Application Architect'
+  businessowner:
+    Type: 'String'
+    Description: 'Name of the Business unit'
+  costcenter:
+    Type: 'Number'
+    Description: 'CostCenter Number' 
+  itowner:
+    Type: 'String'
+    Description: 'Owner of the application'
+  createdby:
+    Type: 'String'
+    Description: 'Name of the person who created this stack'
+  osversion:
+    Type: 'String'
+    Description: 'Name of the operating system version'
+  applicationname:
+    Type: 'String'
+    Description: 'Name of the application'
+  platform:
+    Type: 'String'
+    Description: 'Platform on which application runs' 
+   
+  InstanceCount:
+    Description: Number of EC2 instances (must be between 1 and 2).
+    Type: Number
+    Default: 1
+    MinValue: 1
+    MaxValue: 2
+Conditions:
+  SingleInstance: !Equals [1, !Ref InstanceCount]
+  MultipleInstances: !Equals [2, !Ref InstanceCount]
+Resources:
+  bitAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: SingleInstance
+    Properties:
+      Name: !Join [ "-", ["use1-eas", dv, "tg-bit"]] #"Kin-Art-QA-TargetGroup-EUW1-APP"
+      Port: 443 #80 or 8080 or 443  or 10043 #Art Application Port Number
+      Protocol: HTTPS 
+      Targets:
+        -
+          Id: 
+            Fn::ImportValue: !Sub "${bitAppLayerInstanceId}"
+          Port: 443
+
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTPS #HTTP or HTTPS
+      HealthCheckPort: 443 #Art App Application HealthCheck Port Number
+      HealthCheckPath: /status
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 10
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref VpcId
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: 900
+        - Key: stickiness.app_cookie.cookie_name
+          Value: BITBUCKETSESSIONID
+        - Key: stickiness.type
+          Value: app_cookie
+  
+  LoadBalancerSecureListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+      Certificates: 
+       - 
+         CertificateArn: arn:aws:acm:us-east-1:889995749744:certificate/54ce8d32-53f4-45b2-91ae-836bee786885
+      DefaultActions:
+        -
+          Type: forward
+          TargetGroupArn: !Ref bitAppTargetGroup
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        -
+           Type: forward
+           #TargetGroupArn: !If [MultipleInstances, !Ref ArtAppTargetGroup, !Ref ArtAppTargetGroup]
+           Type: redirect
+           RedirectConfig:
+            Host: "#{host}"
+            Path: "/#{path}"
+            Port: 443
+            Protocol: HTTPS
+            Query: "#{query}"
+            StatusCode: HTTP_302
+          
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: 'ipv4'
+      Type: application
+      Name: !Join [ "-", ["use1-eas", !Ref environmenttype, "bit-nlb"]] #kin-qa-Art-alb-app
+      Scheme: "internal"
+      SecurityGroups: 
+        # - !ImportValue ArtInternalLoadBalancerSecurityGroupId
+        - 'Fn::ImportValue': !Sub "${bitInternalLoadBalancerSecurityGroupId}" 
+      Subnets: 
+        - !Ref Subnet1a
+        - !Ref Subnet1b
+      
+      Tags: 
+        - 
+          Key: "name"
+          Value: "bitbucket Network Load Balancer"
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier
+
+           
+Outputs:
+  DNSName:
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Ref bitAppLayerLoadBalancerDNSName
+  HostedZoneId:
+    Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+    Export:
+      Name: !Ref bitAppLayerLoadBalancerHostedZoneId

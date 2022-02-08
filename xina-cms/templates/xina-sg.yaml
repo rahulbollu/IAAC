@@ -1,0 +1,228 @@
+Parameters:
+  VpcId:
+    Type: 'String'
+    Description: 'Vpc Id'
+  #SSHPort:
+  #  Type: 'String'
+  #  Description: 'SSH remote login port'
+  environmenttype:
+    Type: 'String'
+    Description: 'Application Environment'
+  tagenvironment:
+    Type: 'String'
+    Description: 'Application Tag Environment' 
+  platform:
+    Type: 'String'
+    Description: 'Platform on which application runs' 
+  applicationname:
+    Type: 'String'
+    Description: 'Name of the application'
+  osversion:
+    Type: 'String'
+    Description: 'Name of the operating system version'
+  createdby:
+    Type: 'String'
+    Description: 'Name of the person who created this stack'
+  itowner:
+    Type: 'String'
+    Description: 'Owner of the application'
+  costcenter:
+    Type: 'Number'
+    Description: 'CostCenter Number' 
+  businessowner:
+    Type: 'String'
+    Description: 'Name of the Business unit'
+  applicationtier:
+    Type: 'String'
+    Description: 'Name of the Application Architect'
+
+
+  bitSecurityGroupId:
+    Type: 'String'
+    Description: 'App Instance Security Group ID'   
+  postgresSecurityGroupId:
+    Type: 'String'
+    Description: 'Postgres RDS Environment'    
+  bitlbSecurityGroupId:
+    Type: 'String'
+    Description: 'lb Security Group Id'
+
+Resources:
+  bitSG: 
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-bit-sg"]]
+      GroupDescription: 'Security group for Bitbucket EC2 instance'
+      VpcId:
+        Ref: VpcId
+      Tags:
+        - 
+          Key: name
+          Value: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-bit-sg"]]
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier 
+  
+  bitIngressRules1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitSG  
+      IpProtocol: icmp
+      FromPort: -1
+      ToPort: -1    
+      CidrIp: 172.16.0.0/12
+      Description: Allow ping from Shure
+  bitIngressRules2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitSG  
+      IpProtocol: tcp
+      FromPort: 8082
+      ToPort: 8082
+      SourceSecurityGroupId: !Ref bitlbSG
+      Description: Allow port 8080 from ALB SG
+  bitIngressRules3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitSG  
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 172.17.0.0/16
+      Description: Allow SSH from Niles    
+  bitIngressRules5:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitSG  
+      IpProtocol: tcp
+      FromPort: 8081
+      ToPort: 8081
+      SourceSecurityGroupId: !Ref bitlbSG
+      Description: Allow port from ALB SG
+  ############------------------------------------------------##############
+  bitlbSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-bit-alb-sg"]]
+      GroupDescription: 'Security group for App loadbalancer instance'
+      VpcId:
+        Ref: VpcId
+      Tags:
+        - 
+          Key: name
+          Value: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-bit-alb-sg"]]
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier
+          
+  bitloadbalancerIngressRules1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitlbSG  
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      CidrIp: 172.16.0.0/12
+      Description: Custom Test Web Server Port
+  bitloadbalancerIngressRules2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitlbSG  
+      IpProtocol: tcp
+      FromPort: 8081
+      ToPort: 8081
+      CidrIp: 172.16.0.0/12
+      Description: Allow custom tcp port b/w lb and ec2 instance
+  bitloadbalancerIngressRules3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref bitlbSG  
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 172.16.0.0/12
+      Description: Allow https b/w alb and ec2 instance
+  
+####################--------------------------------##################
+  PostgresRDSSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-postgresRDS-sg"]] # 'Informatica_QA_Ora_SG'
+      GroupDescription: 'Security group for Postrges RDS DB instance'
+      VpcId:
+        Ref: VpcId
+      Tags:
+        - 
+          Key: name
+          Value: !Join [ "-", ["use1-eas", !Ref environmenttype, "dvops-postgresRDS-sg"]] #"Infor_QA_Ora_SG"    
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier
+  PostgresSGIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: 'Security group inbound rule to allow traffic for Postgres RDS instances'
+      GroupId: !Ref PostgresRDSSG
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref ArtSG
+  
+Outputs: 
+  bitSecurityGroupId:
+    Value:
+      !Ref bitSG
+    Export:
+      Name: !Ref bitSecurityGroupId
+
+  postgresSecurityGroupId: 
+    Value:
+      !Ref PostgresRDSSG
+    Export:
+      Name: !Ref postgresSecurityGroupId
+
+  bitlbSecurityGroupId:
+    Value:
+      !Ref bitlbSG
+    Export:
+      Name: !Ref bitlbSecurityGroupId
+ 

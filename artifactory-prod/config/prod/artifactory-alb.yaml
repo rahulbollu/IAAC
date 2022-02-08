@@ -1,0 +1,17 @@
+template_path: artifactory-alb.yaml
+parameters:
+   
+  VpcId: vpc-09041cee364ae17b2
+  Subnet1a: subnet-015c0a2f132619bd8
+  Subnet1b: subnet-0dc9d5f9400bbce77
+  Environment: prod
+  TargetGroupEnvironment: prod        
+  InstanceCount: "1"
+  costcenter: artifactory
+  applicationrole: internalloadbalancer
+  balancing: artifactory
+  ArtAppLayerLoadBalancerHostedZoneId: ArtprodAppLayerLoadBalancerHostedZoneId       
+  ArtAppLayerLoadBalancerDNSName: ArtprodAppLayerLoadBalancerDNSName
+  ArtAppLayerInstanceId: AppEC2InstanceId
+  ArtInternalLoadBalancerSecurityGroupId: ApplbSecurityGroupId
+         

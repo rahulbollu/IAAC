@@ -1,0 +1,25 @@
+template_path: bitbucket-nfs.yaml
+parameters:
+
+  SubnetId1: subnet-059e7ea0ed74546d6
+  applicationname: bitbucket
+  PrivateIp: 172.16.222.47
+  AvailabilityZone: us-east-1a
+  InstanceType: t4g.small
+  ImageId: ami-01fc429821bf1f4b4
+  RootVolumeSize: '30'
+  DataVolumeSize: '250'
+  KmsKeyId: 995d46c7-0af1-4cd9-9b31-755386756f7f
+  KeyPairName: EAS_Dev_KeyPair
+  environmenttype: dev
+  TagEnvironment: dev
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  osversion: rhel-8
+  costcenter: "1505"
+  businessowner: komosar@shure.com
+  applicationtier: application
+  bitSecurityGroupId: bitSecurityGroupId
+  bitnfsec2instanceid: bitnfsec2instanceid
+  
+ 

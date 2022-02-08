@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Security Groups for App loadbalancer Instance'
+Parameters:
+  VpcId:
+    Type: 'String'
+    Description: 'Vpc Id'
+  #SSHPort:
+  #  Type: 'String'
+  #  Description: 'SSH remote login port'
+  environmenttype:
+    Type: 'String'
+    Description: 'Application Environment'
+  osversion:
+    Type: 'String'
+    Description: 'Name of OSVersion'
+  tagenvironment:
+    Type: 'String'
+    Description: 'Application Tag Environment' 
+  applicationname:
+    Type: 'String'
+    Description: 'Name of the Application' 
+  createdby:
+    Type: 'String'
+    Description: 'Name of the person created'
+  itowner:
+    Type: 'String'
+    Description: 'Name of the IT owner'
+  costcenter:
+    Type: 'Number'
+    Description: 'cost center number'
+  businessowner:
+    Type: 'String'
+    Description: 'Name of the business owner'
+  applicationtier:
+    Type: 'String'
+    Description: 'application type'
+    
+  applbSecurityGroupId:
+    Type: 'String'
+    Description: 'App loadbalancer Instance Security Group ID'       
+  
+Resources:
+  ApplbSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", ["use1-eas", !Ref environment, "dvops-app-lb-sg"]]
+      GroupDescription: 'Security group for App loadbalancer instance'
+      VpcId:
+        Ref: VpcId
+      Tags:
+        - 
+          Key: Name
+          Value: !Join [ "-", ["use1-eas", !Ref environment, "dvops-art-lb-sg"]]
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier 
+          
+  ApploadbalancerIngressRules1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApplbSG  
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      CidrIp: 172.16.0.0/12
+      Description: Custom Test Web Server Port
+  ApploadbalancerIngressRules2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApplbSG  
+      IpProtocol: tcp
+      FromPort: 8081
+      ToPort: 8081
+      CidrIp: 172.16.0.0/12
+      Description: Allow custom tcp port b/w lb and ec2 instance
+
+Outputs: 
+  ApplbSecurityGroupId:
+    Value:
+      !Ref ApplbSG
+    Export:
+      Name: !Ref ApplbSecurityGroupId

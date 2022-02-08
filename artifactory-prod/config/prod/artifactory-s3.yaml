@@ -1,0 +1,6 @@
+template_path: artifactory-s3.yaml
+parameters:  
+  
+  Environment: prod
+  TagEnvironment: PROD
+  BucketName: shure-pdd-artifactory-filestore-prod

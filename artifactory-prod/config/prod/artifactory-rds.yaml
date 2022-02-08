@@ -1,0 +1,32 @@
+template_path: artifactory-rds.yaml
+parameters:
+
+  VpcId: vpc-09041cee364ae17b2
+  AvailabilityZone: us-east-1a
+  DBSubnetIds: subnet-015c0a2f132619bd8, subnet-0dc9d5f9400bbce77
+  DBInstanceClass: db.t3.small
+  EngineVersion: "13.4"
+  DBEngineType: postgres
+  DBInstanceIdentifier: use1-eas-prd-pgsql-art-rds01
+  DBStorageType: gp2
+  DBStorageSize: "20"
+  LicenseModel: postgresql-license
+  MaxAllocatedStorage: "200"
+  DBSubnetGroup: use1-eas-prd-pdd-cfn-mssql-rdsdbsubnetgroup-1k1lnymkxs72j
+  StorageEncrypted: "true"
+  BackupRetentionPeriod: "35"
+  MultiAZ: "false"
+  PreferredBackupWindow: 03:00-04:00
+  PreferredMaintenanceWindow: Sun:04:00-Sun:06:00
+  ParameterGroupFamily: postgres13
+  ArtPostgresRDSEndpointPort: ArtProdPostgresRDSEndpointPort
+  ArtPostgresRDSEndpointAddress: ArtProdPostgresRDSEndpointAddress
+  PostgresSecurityGroupId: PostgresSecurityGroupId
+  environmenttype: prod
+  osversion: rhel-8
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  costcenter: "1505"
+  businessowner: komosar@shure.com
+  applicationname: artifactory
+  applicationtier: application

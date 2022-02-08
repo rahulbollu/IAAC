@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Internal Load Balancer to access Artifactory App EC2 Instance in a private subnet'
+Parameters:
+  
+  VpcId: 
+    Type: String
+  Subnet1a: 
+    Type: String
+  Subnet1b: 
+    Type: String
+  ArtAppLayerLoadBalancerHostedZoneId:
+    Type: String
+  ArtAppLayerLoadBalancerDNSName:
+    Type: String
+  ArtAppLayerInstanceId:
+    Type: String
+  Environment:
+    Type: 'String'
+  TargetGroupEnvironment:
+    Type: 'String'
+  ArtInternalLoadBalancerSecurityGroupId:
+    Type: 'String'
+  applicationrole:
+    Type: 'String'
+  balancing:
+    Type: 'String'
+  costcenter:
+    Type: 'String'
+   
+  InstanceCount:
+    Description: Number of EC2 instances (must be between 1 and 2).
+    Type: Number
+    Default: 1
+    MinValue: 1
+    MaxValue: 2
+Conditions:
+  SingleInstance: !Equals [1, !Ref InstanceCount]
+  MultipleInstances: !Equals [2, !Ref InstanceCount]
+Resources:
+  ArtAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: SingleInstance
+    Properties:
+      Name: !Join [ "-", ["use1-eas", prd, "targetGroup-art"]] #"Kin-Art-QA-TargetGroup-EUW1-APP"
+      Port: 8080 #80 or 8080 or 443  or 10043 #Art Application Port Number
+      Protocol: HTTP #HTTPS
+      Targets:
+        -
+          Id: 
+            Fn::ImportValue: !Sub "${ArtAppLayerInstanceId}"
+          Port: 8080
+
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP #HTTP or HTTPS
+      HealthCheckPort: 8080 #Art App Application HealthCheck Port Number
+      HealthCheckPath: /
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 10
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref VpcId
+      # TargetGroupAttributes:
+      #   - Key: stickiness.enabled
+      #     Value: true
+      #   - Key: stickiness.lb_cookie.duration_seconds
+      #     Value: 900
+  
+  LoadBalancerSecureListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+      Certificates: 
+       - 
+         CertificateArn: arn:aws:acm:us-east-1:061673084583:certificate/a1d43b96-45fb-4cc2-91e9-a769eb2b1913
+      DefaultActions:
+        -
+          Type: forward
+          TargetGroupArn: !Ref ArtAppTargetGroup
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        -
+           Type: forward
+           #TargetGroupArn: !If [MultipleInstances, !Ref ArtAppTargetGroup, !Ref ArtAppTargetGroup]
+           Type: redirect
+           RedirectConfig:
+            Host: "#{host}"
+            Path: "/#{path}"
+            Port: 443
+            Protocol: HTTPS
+            Query: "#{query}"
+            StatusCode: HTTP_302
+          
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: 'ipv4'
+      Type: application
+      Name: !Join [ "-", ["use1-eas", !Ref Environment, "art-alb"]] #kin-qa-Art-alb-app
+      Scheme: "internal"
+      SecurityGroups: 
+        # - !ImportValue ArtInternalLoadBalancerSecurityGroupId
+        - 'Fn::ImportValue': !Sub "${ArtInternalLoadBalancerSecurityGroupId}" 
+      Subnets: 
+        - !Ref Subnet1a
+        - !Ref Subnet1b
+      
+      Tags: 
+        - 
+          Key: "name"
+          Value: "Artifactory Application Load Balancer"
+        - 
+          Key: "costcenter"
+          Value: !Ref costcenter 
+        - 
+          Key: "applicationrole"
+          Value: !Ref applicationrole 
+        -
+          Key: "balancing"
+          Value: !Ref balancing 
+        -
+          Key: "Environment"
+          Value: !Ref TargetGroupEnvironment
+        -
+          Key: "monitor"
+          Value: "true"
+        -
+          Key: "monitoralertemail"
+          Value: "bollu_rahul@shure.com"    
+        - 
+          Key: "ResponsibleArchitect"
+          Value: "Yasir Khan"
+
+           
+Outputs:
+  DNSName:
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Ref ArtAppLayerLoadBalancerDNSName
+  HostedZoneId:
+    Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+    Export:
+      Name: !Ref ArtAppLayerLoadBalancerHostedZoneId

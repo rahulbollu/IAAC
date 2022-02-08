@@ -1,0 +1,24 @@
+template_path: bitbucket-nlb.yaml
+parameters:
+   
+  VpcId: vpc-0d744ac4f9a1387da
+  Subnet1a: subnet-059e7ea0ed74546d6
+  Subnet1b: subnet-09bcc0d941ead2cc0
+  environmenttype: dev
+  TargetGroupEnvironment: dev        
+  InstanceCount: "1"
+  applicationtier: application
+  applicationname: bitbucket
+  platform: devops
+  businessowner: komosar@shure.com
+  costcenter: "1649"
+  itowner: khany@shure.com
+  createdby: bollur@shure.com
+  osversion: rhel-8
+  applicationrole: internalloadbalancer
+  balancing: bitbucket
+  bitAppLayerLoadBalancerHostedZoneId: bitdevAppLayerLoadBalancerHostedZoneId       
+  bitAppLayerLoadBalancerDNSName: bitdevAppLayerLoadBalancerDNSName
+  bitAppLayerInstanceId: bitec2instanceid 
+  bitInternalLoadBalancerSecurityGroupId: bitlbSecurityGroupId
+         

@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EC2 Instance for bitbucket app'
+Parameters:
+  InstanceType:
+    Type: 'String'
+    Description: 'Instance Type for the App Layer'
+  InstanceType:
+    Type: 'String'
+    Description: 'Instance Type for the nfs' 
+  SubnetId1: 
+    Type: 'String'
+    Description: 'default subnet id taken to check connectivity'
+  PrivateIp:
+    Type: 'String'
+    Description: 'Private IP address of the EC2 instance'
+  AvailabilityZone:
+    Type: 'String'
+    Description: 'Subnet Availability Zone'
+  ImageId:
+    Type: 'String'
+    Description: 'AWS RHEL8  AMI'  
+  RootVolumeSize:
+    Type: 'String'
+  DataVolumeSize:
+    Type: 'String'
+  KmsKeyId:
+    Type: 'String'
+    Description: 'KMS ID to encrypt EBS Volumes'
+  KeyPairName:
+    Type: 'String'
+  bitnfsec2instanceid:
+    Type: 'String'
+    Description: 'Exported nfs EC2 Instance Id for other stacks to use'
+  bitSecurityGroupId:
+    Type: 'String'
+    Description: Standard Security Group for bitbucket Access
+  environmenttype:
+    Type: 'String'
+    Description: 'Application Environment' 
+  osversion:
+    Type: 'String'
+    Description: 'Name of the operating system version'
+  TagEnvironment:
+    Type: 'String'
+    Description: 'Environment variable for environment dev'
+  itowner:
+    Type: 'String'
+    Description: 'Owner of the application'
+  createdby:
+    Type: 'String'
+    Description: 'Name of the person who created this stack'
+  applicationtier:
+    Type: 'String'
+    Description: 'Application type'
+  costcenter:
+    Type: 'Number'
+    Description: 'CostCenter Number' 
+  businessowner:
+    Type: 'String'
+    Description: 'Name of the Business unit'
+  applicationname:
+    Type: 'String'
+    Description: 'Name of the application'
+  
+Resources:
+  bitnfsec2instance:
+    Type: AWS::EC2::Instance 
+    Properties:
+      InstanceType: 
+        Ref: InstanceType
+      ImageId: 
+        Ref: ImageId
+      
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sda1"
+        Ebs: 
+          VolumeType: "gp3"
+          DeleteOnTermination: "true"
+          Encrypted: "true"
+          VolumeSize: !Ref RootVolumeSize
+ 
+      # SubnetId:
+      #   Ref: SubnetId1
+      NetworkInterfaces:
+      - NetworkInterfaceId:
+          Ref: bitnfsNetworkInterface
+        DeviceIndex: '0'
+                 
+      KeyName: !Ref KeyPairName
+      
+      Tags:
+        - 
+          Key: Name
+          Value: !Join [ "-", ["aws", dv, "lx-bit-nfs"]] # Value: "aws-pr-lx-art01"
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier
+        
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+            sudo yum update -y           
+            
+  bitnfsNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties: 
+      Description: 'bit Instance Primary interface with a static ip address'
+      GroupSet:
+        - 'Fn::ImportValue': !Sub "${bitSecurityGroupId}"
+      SubnetId: !Ref SubnetId1
+      SourceDestCheck: 'true'
+      PrivateIpAddress: !Ref PrivateIp
+      
+  bitnfsEncryptedEBSVol:
+    Type: AWS::EC2::Volume
+    Properties:
+      VolumeType: "gp3"
+      #DeleteOnTermination: "false"
+      AvailabilityZone: !Ref AvailabilityZone
+      Encrypted: "true"
+      Size: !Ref DataVolumeSize
+      KmsKeyId: !Ref KmsKeyId
+      
+  bitnfsEncryptedEBSVolAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref bitnfsec2instance
+      VolumeId: !Ref bitnfsEncryptedEBSVol
+      Device: /dev/sdc
+Outputs:
+   bitnfsec2instanceid: 
+    Value:
+      !Ref bitnfsec2instance
+    Export:
+      Name: !Ref bitnfsec2instanceid 

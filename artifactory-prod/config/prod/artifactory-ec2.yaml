@@ -1,0 +1,23 @@
+template_path: artifactory-ec2.yaml
+parameters:
+
+  SubnetId1: subnet-015c0a2f132619bd8
+  applicationname: artifactory
+  PrivateIp: 172.16.226.40
+  AvailabilityZone: us-east-1a
+  InstanceType: t3a.small
+  ImageId: ami-0b0af3577fe5e3532
+  RootVolumeSize: '30'
+  DataVolumeSize: '30'
+  KmsKeyId: af749f54-6ed1-4313-9e3a-88df7812591b
+  KeyPairName: EAS_Prod_KeyPair
+  environmenttype: prod
+  TagEnvironment: prod
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  osversion: rhel-8
+  costcenter: "1505"
+  businessowner: komosar@shure.com
+  applicationtier: application
+  AppSecurityGroupId: AppSecurityGroupId
+  artec2instanceid: artec2instanceid

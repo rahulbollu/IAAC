@@ -1,0 +1,26 @@
+template_path: bitbucket-ec2.yaml
+parameters:
+
+  SubnetId1: subnet-059e7ea0ed74546d6
+  applicationname: bitbucket
+  PrivateIp1: 172.16.222.45
+  PrivateIp2: 172.16.222.46
+  AvailabilityZone: us-east-1a
+  InstanceType: t3.large
+  ImageId: ami-0b0af3577fe5e3532
+  RootVolumeSize: '30'
+  DataVolumeSize: '30'
+  KmsKeyId: 995d46c7-0af1-4cd9-9b31-755386756f7f
+  KeyPairName: EAS_Dev_KeyPair
+  environmenttype: dev
+  TagEnvironment: dev
+  createdby: bollur@shure.com
+  itowner: khany@shure.com
+  osversion: rhel-8
+  costcenter: "1649"
+  businessowner: komosar@shure.com
+  applicationtier: application
+  bitSecurityGroupId: bitSecurityGroupId
+  bitec2instance1id: bitec2instanceid
+  bitec2instance2id: bitec2instance2id
+ 

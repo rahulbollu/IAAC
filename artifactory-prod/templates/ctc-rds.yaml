@@ -1,0 +1,247 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  VpcId:
+    Type: String
+    Description: Security group VPC identifier
+  AvailabilityZone:
+    Type: String
+    Default: ""
+  MultiAZ:
+    Type: String
+  DBSubnetIds:
+    Type: CommaDelimitedList
+    Description: List of VPC Database Subnet Group Identifiers
+  # DBName:
+  #   Type: String
+  #   Description: Database name
+  # DatabaseBackupBucketName:
+  #   Type: String
+  #   Description: Bucket name that stores database backups
+  DBInstanceClass:
+    Type: String
+    Description: Database instance class type, for ex db.t2.micro.
+  EngineVersion:
+     Type: Number
+     Description: Database engine version
+  DBEngineType:
+    Type: String
+    Description: Database engine type like sql express or standard
+  DBInstanceIdentifier: 
+      Type: String
+  DBStorageType:
+    Type: String
+    Description: Database storage type. For ex, standard, iops.
+  DBStorageSize:
+    Type: Number
+    Description: Database storage size in GB
+  LicenseModel:
+    Type: String
+    Description: Type of License
+  MaxAllocatedStorage:
+    Type: Number
+    Description: Maximum Database storage size in GB
+  DBSubnetGroup:
+    Type: String
+    Description: Database Subnet Group Name
+  StorageEncrypted:
+      Type: String
+  BackupRetentionPeriod:
+    Type: Number
+    Description: Back Retention Period for DB backups
+  PreferredBackupWindow:
+    Type: String
+  PreferredMaintenanceWindow:
+    Type: String
+  ParameterGroupFamily:
+    Type: String
+    Description: Family name needed to create a parameter group
+  CtcPostgresRDSEndpointPort:
+    Type: String
+    Description: Database endpoint port export name
+  CtcPostgresRDSEndpointAddress:
+    Type: String
+    Description: Database endpoint address export name
+  CtcPostgresSecurityGroupId:
+    Type: String
+  applicationname:
+    Type: String
+    Description: Name of the application
+  createdby:
+    Type: String
+    Description: email of the person who created the stack
+  
+  #OptionGroupName:
+  #  Type: String
+  # MasterUserPassword:
+  #   Type: 'String'
+  environmenttype:
+    Type: 'String'
+    Description: 'Common tool chain PostgreSQL Database Environment'
+  osversion:
+    Type: 'String'
+    Description: 'Name of the os version'
+  itowner:
+    Type: String
+    Description: email of the IT owner
+  costcenter:
+    Type: Number 
+    Description: cost center number
+  businessowner:
+    Type: String
+    Description: eamail of the business owner
+  applicationtier:
+    Type: String
+    Description: application type
+  
+  
+Conditions:
+  IsMultiAZ: !Equals [ !Ref MultiAZ, 'true']
+Resources:
+  CtcPostgresRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier 
+      #DBName: !Ref DBName
+      MasterUsername: '{{resolve:ssm:use1-eas-dev-pgsql-ctc-rds-user:1}}'
+      MasterUserPassword: "{{resolve:ssm-secure:use1-eas-dev-pgsql-ctc-rds-passwd:1}}"
+      #MasterUsername: '{{resolve:ssm:use1-edl-prd-infor-ora-rds-user:1}}'
+      #MasterUserPassword: "{{resolve:ssm-secure:use1-edl-prd-infor-ora-rds-passwd:1}}"
+      #MasterUserPassword: "{{resolve:ssm-secure:ssbRDSmEcntl:1}}"
+      # MasterUsername: administrator
+      # MasterUserPassword: !Ref MasterUserPassword
+      #https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
+      Engine: !Ref DBEngineType 
+      EngineVersion: !Ref EngineVersion
+      LicenseModel: !Ref LicenseModel #e.g license-included
+      AvailabilityZone: !If [IsMultiAZ, !Ref 'AWS::NoValue', !Ref AvailabilityZone]
+      # AvailabilityZone: !Ref AvailabilityZone # uncomment when launcing QA and QC. This value is not allowed when Multi-AZ is true.
+      MultiAZ: !Ref MultiAZ
+      StorageEncrypted: !Ref StorageEncrypted #true or false - DB Engine sqlserver-ex does not support encryption at rest
+      StorageType: !Ref DBStorageType
+      AllocatedStorage: !Ref DBStorageSize
+      MaxAllocatedStorage: !Ref MaxAllocatedStorage
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      #OptionGroupName: !Ref PostgreSQLOptionGroup
+      DBParameterGroupName: !Ref PostgreSQLRDSParameterGroup #postgresrdsparametergroup 
+      BackupRetentionPeriod: !Ref BackupRetentionPeriod  
+      PreferredBackupWindow: !Ref PreferredBackupWindow # "02:00-03:00" #Between 10pm-11pm EST (2:00-3:00 UTC)
+      PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow # "Sun:03:00-Sun:05:00"  #Format: ddd:hh24:mi-ddd:hh24:mi
+      DeletionProtection: 'true'
+      CopyTagsToSnapshot: 'true'
+      VPCSecurityGroups:
+        # - !Ref VpcDBSecurityGroup
+        - 'Fn::ImportValue': !Sub "${CtcPostgresSecurityGroupId}"
+        #    !Sub 
+        # - !Ref RemAccSecurityGroup # Existing Remote Access Security Group
+      
+      Tags: 
+        - 
+          Key: Name
+          Value: !Join [ "", ["use1-eas", dev, "pgsql-ctc-rds01"]] #"use1-eas-prod-mssql-wil-rds01"
+        - Key: application-name
+          Value: !Ref applicationname 
+        - Key: environment-type
+          Value: !Ref environmenttype
+        - Key: os-version
+          Value: !Ref osversion 
+        - Key: created-by
+          Value: !Ref createdby          
+        - Key: it-owner
+          Value: !Ref itowner 
+        - Key: cost-center
+          Value: !Ref costcenter 
+        - Key: business-owner
+          Value: !Ref businessowner
+        - Key: application-tier
+          Value: !Ref applicationtier
+
+  #DBSubnetGroup:
+  #   Type: "AWS::RDS::DBSubnetGroup"
+  #   Properties: 
+  #     DBSubnetGroupName: !Ref DBSubnetGroupName
+  #     DBSubnetGroupDescription: 'Database Subnet Group for RDS database instance'
+  #     SubnetIds: !Ref DBSubnetIds
+  
+  PostgreSQLRDSParameterGroup:
+   Type: AWS::RDS::DBParameterGroup
+   Properties: 
+     Description: "Parameter group for PostgreSQL"
+     Family: !Ref ParameterGroupFamily #example sqlserver-ee-15.0
+      
+      # Tags: 
+      #   - Key: Name
+      #    Value: "PostgreSQLParmeterGroup"
+      #   - Key: Database
+      #    Value: "PostgreSQL"
+      #   - Key: Platform
+      #    Value: DevOps
+      #   - Key: Application
+      #    Value: "Artifactory"
+      #   - Key: CostCenter
+      #    Value: "1649"
+      #   - Key: Environment
+      #    Value: "Dev"
+      #   - Key: ResponsibleArchitect
+      #    Value: "Yasir Khan"
+
+  #PostgreSQLOptionGroup:
+  #  Type: AWS::RDS::OptionGroup
+  #  Properties: 
+  #    EngineName: PostgreSQL 
+  #    MajorEngineVersion: "13"
+      #OptionGroupName: "PostgreSQL-optiongroup"   # Not supported in Postgress, SQL Server Web & Express editions
+      #OptionConfigurations: 
+      #-
+        #OptionName: "S3_INTEGRATION"  
+        # OptionSettings: 
+        # - 
+        #   Name: "IAM_ROLE_ARN"
+        #   Value: !Ref IAMRoleArn
+      #OptionGroupDescription:  Option group for PostgreSQL 13
+      #Tags: 
+       # - Key: Name
+       #   Value: "PostgreSQLOptionGroup"
+       # - Key: Database
+       #   Value: "PostgreSQL"
+       # - Key: Platform
+       #   Value: Sandbox
+       # - Key: ApplicationRole
+       #   Value: "DB Tier"
+       # - Key: Owner
+       #   Value: "Joe Caruso"
+       # - Key: CostCenter
+       #   Value: "Shure"
+       # - Key: ReleaseStage
+       #   Value: "Dev"
+       # - Key: ResponsibleArchitect
+       #   Value: "Yasir Khan"
+        # - Key: monitor
+        #   Value: "True"
+     
+
+# TO DO List
+# IAM Role for SQL Server Backup is created manually using options group (IAM Role can also be created)
+# Backup - Option Group is being setup to allow native SQL backups.(done)
+# DB encryption is enabled. (express not supported)
+# Parameter Store is good to use. Secret Manager is expensive. (done)
+# Security Groups for inbound and outbound rules (done)
+
+
+Outputs:
+  CtcPostgresRDSEndpointAddress:
+    Value:
+      !GetAtt CtcPostgresRDS.Endpoint.Address
+    Export:
+      Name: !Ref CtcPostgresRDSEndpointAddress
+  CtcPostgresRDSEndpointPort:
+    Value:
+      !GetAtt CtcPostgresRDS.Endpoint.Port
+    Export:
+      Name: !Ref CtcPostgresRDSEndpointPort     
+#   DBlayerSecurityGroup: 
+#     Value:
+#       !Ref VpcDBSecurityGroup
+#     Export:
+#       Name: DBlayerSecurityGroupName
+
